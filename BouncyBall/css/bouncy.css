@@ -2,7 +2,7 @@
   background-color: #A9A9A9;
 }
 
-.no-padding{
+.no-padding {
   padding: 0px;
 }
 
@@ -10,8 +10,7 @@
   background: #fff;
   padding: 5px;
 }
-
-@media (min-width:769px) {
+@media (min-width: 769px) {
   .instruction {
     margin-top: 100px;
     margin-left: -45px;
