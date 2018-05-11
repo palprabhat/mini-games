@@ -1,3 +1,11 @@
+// Bouncy Ball
+// Prabhat Pal (www.prabhatpal.com)
+
+/**
+ * [Gererate pillars with random gap position on different pillars]
+ * @param {[Object]} s            [p5 canvas object]
+ * @param {[Number]} groundHeight [height of the bottom pillar]
+ */
 function Pillar(s, groundHeight){
   this.top = s.random(50, s.height-groundHeight-250);
   this.w = 80;
@@ -17,9 +25,10 @@ function Pillar(s, groundHeight){
     }
   }
 
-  this.checkCollision = function(flappy){
-    if((flappy.Y - (flappy.size/2) <= this.top || flappy.Y + (flappy.size/2) >= this.top + this.space) &&
-    (flappy.X + (flappy.size/2) >= this.X &&  flappy.X - (flappy.size/2) <= this.X + this.w)){
+  //did the ball collided with the pillar? return true if yes else false
+  this.checkCollision = function(ball){
+    if((ball.Y - (ball.size/2) <= this.top || ball.Y + (ball.size/2) >= this.top + this.space) &&
+    (ball.X + (ball.size/2) >= this.X &&  ball.X - (ball.size/2) <= this.X + this.w)){
       return true;
     }
     return false;

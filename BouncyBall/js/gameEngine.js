@@ -1,16 +1,29 @@
-var flappy;
-var lift, coin, hit;
-var pillar = [2];
-var wd = ($(window).width()<768) ? $(window).width() : 450;
-var ht = wd * 1.35;
-var tile, index_ground;
-var groundTiles;
+// Bouncy Ball
+// Prabhat Pal (www.prabhatpal.com)
+
+//global variables
+var ball, lift, coin, hit, tile, groundTiles;
 var ground = [];
 var clouds = [];
-var tile;
+var pillar = [2];
+var gameover = false;
+var paused = true;
 var tileWidth = 18;
+var index = 0;
+var index_score = 0;
+var index_pillar = 0;
 var hiScore = 0;
+var gravity = 0.5;
+var force = -15;
+var wd = ($(window).width()<768) ? $(window).width() : 450;
+var ht = wd * 1.35;
 
+
+/**
+ * [Initialize game parameter, set action for key or mouse pressed, provide game flow]
+ * @param  {[String]} game [id of the HTML div where the canvas will be rendered]
+ * @return {[Object]}      [p5 object]
+ */
 var gameWindow = function(game) {
   game.preload = function() {
     game.soundFormats('mp3', 'ogg');
@@ -42,15 +55,15 @@ var gameWindow = function(game) {
     }
     if(paused & !gameover){
       game.image(title, game.width/6, 100, title.width/1.5, title.height/1.5);
-      flappy.display();
-      flappy.wobble();
+      ball.display();
+      ball.wobble();
     }
 
     if(!paused && !gameover){
       generatePillars();
       playGame(true);
 
-      if(pillar[index_pillar].checkCollision(flappy)){
+      if(pillar[index_pillar].checkCollision(ball)){
         gameover = true;
         hit.play();
       }
@@ -61,7 +74,7 @@ var gameWindow = function(game) {
       playGame(false);
     }
 
-    if (!paused && flappy.fallen(ground[0].height)){
+    if (!paused && ball.fallen(ground[0].height)){
       if(!gameover){
         hit.play();
       }
@@ -104,21 +117,19 @@ var gameWindow = function(game) {
 };
 var canvas = new p5(gameWindow, 'gameWindow');
 
+//initialize paramaters
 function initialize(){
-  gravity = 0.5;
-  force = -15;
   index = 0;
   index_score = 0;
   index_pillar = 0;
   gameover = false;
   paused = true;
   hiScore = 0;
-  xTile = 0;
   groundTiles = canvas.width/tileWidth + 2;
 
   createGround();
 
-  flappy = new Bird(canvas);
+  ball = new Ball(canvas);
   pillar[index] = new Pillar(canvas, ground[0].height);
   pillar[index].X = 600;
 
@@ -130,6 +141,32 @@ function initialize(){
   }
 }
 
+//start the game
+function startGame() {
+  pillar = [2];
+  initialize();
+  pillar[index]
+  paused = false;
+}
+
+//update ball and pillar position and display them during the game is played 
+function playGame(flag){
+  for(var p in pillar){
+    pillar[p].update(flag);
+    pillar[p].display();
+  }
+
+  ball.update(gravity, ground[0].height);
+  ball.display();
+}
+
+//apply fixed force to the ball
+function applyForce(){
+  ball.applyForce(force);
+  lift.play();
+}
+
+//trigger this event only when mouse is pressed on the canvas
 function mousePressedOnCanvas(){
   if(!gameover){
     applyForce();
@@ -140,16 +177,7 @@ function mousePressedOnCanvas(){
   }
 }
 
-function touchStartedOnCanvas(){
-  if(!gameover){
-    applyForce();
-  }
-  if(paused){
-    startGame();
-    applyForce();
-  }
-}
-
+//create new pillars and destroy the pillars which are outside the frame
 function generatePillars(){
   if(pillar[index].X <= wd*0.4){
     index = (index + 1) % 2
@@ -157,12 +185,14 @@ function generatePillars(){
   }
 }
 
+//create ground of size of the game window
 function createGround(){
   for(i = 0; i < groundTiles; i++){
     ground[i] = new Ground(canvas, tile, i*tileWidth);
   }
 }
 
+//move the ground during the game play
 function moveGround(){
   for(var t in ground){
     ground[t].update();
@@ -172,12 +202,14 @@ function moveGround(){
   }
 }
 
+//create clouds
 function createCloud(){
   for(i = 0; i < 5; i++){
     clouds[i] = new Cloud(canvas, cloud);
   }
 }
 
+//move clouds
 function moveCloud(){
   for(var c in clouds){
     clouds[c].update();
@@ -187,55 +219,35 @@ function moveCloud(){
   }
 }
 
-function applyForce(){
-  flappy.applyForce(force);
-  lift.play();
-}
-
-function startGame() {
-  pillar = [2];
-  initialize();
-  pillar[index]
-  paused = false;
-}
-
-function playGame(flag){
-  for(var p in pillar){
-    pillar[p].update(flag);
-    pillar[p].display();
-  }
-
-  flappy.update(gravity, ground[0].height);
-  flappy.display();
-}
-
+//update score
 function updateScore(){
-  if(pillar[index_score].X + pillar[index_score].w - 2*flappy.size <= flappy.X){
-    flappy.score++;
-    if(flappy.score >= parseInt(Cookies.get('hiScore'))){
-      hiScore = flappy.score;
+  if(pillar[index_score].X + pillar[index_score].w - 2*ball.size <= ball.X){
+    ball.score++;
+    if(ball.score >= parseInt(Cookies.get('hiScore'))){
+      hiScore = ball.score;
       Cookies.set("hiScore", hiScore, {expires: 365, path: ''});
     }
     coin.play();
     index_score = (index_score + 1) % 2;
   }
 
-  if(pillar[index_pillar].X + pillar[index_pillar].w  <= flappy.X-flappy.size){
+  if(pillar[index_pillar].X + pillar[index_pillar].w  <= ball.X-ball.size){
     index_pillar = (index_pillar + 1) % 2;
   }
 
   canvas.textSize(64);
   canvas.fill(255);
-  canvas.text(flappy.score, (canvas.width/2)-(flappy.score.toString().length*16), canvas.height/8);
+  canvas.text(ball.score, (canvas.width/2)-(ball.score.toString().length*16), canvas.height/8);
 }
 
+//display score
 function scoreBoard(){
   canvas.fill(210, 180, 140);
   canvas.rect(wd*0.125,200,wd*0.75,200);
 
   canvas.fill(255);
   canvas.textSize(58);
-  canvas.text(flappy.score, (canvas.width/2)-(flappy.score.toString().length*16), 255);
+  canvas.text(ball.score, (canvas.width/2)-(ball.score.toString().length*16), 255);
 
   canvas.fill(188, 143, 143);
   canvas.textSize(32);
