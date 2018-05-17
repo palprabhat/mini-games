@@ -53,7 +53,7 @@ var gameWindow = function(game) {
     for(var c in clouds){
       clouds[c].display();
     }
-    if(paused & !gameover){
+    if(paused && !gameover){
       game.image(title, game.width/6, 100, title.width/1.5, title.height/1.5);
       ball.display();
       ball.wobble();
@@ -97,20 +97,16 @@ var gameWindow = function(game) {
 
   game.keyPressed = function(){
     if (game.key==' '){
-      if(!gameover){
-        applyForce();
-      }
-    }
-    if(paused && !gameover){
-      if (game.key==' '){
+      if(paused && !gameover){
         startGame();
         applyForce();
       }
-    }
-    if(paused && gameover){
-      if (game.key==' '){
+      else if(paused && gameover){
         startGame();
         paused = true;
+      }
+      else if(!gameover){
+        applyForce();
       }
     }
   };
@@ -168,11 +164,15 @@ function applyForce(){
 
 //trigger this event only when mouse is pressed on the canvas
 function mousePressedOnCanvas(){
-  if(!gameover){
+  if(paused && !gameover){
+    startGame();
     applyForce();
   }
-  if(paused){
+  else if(paused && gameover){
     startGame();
+    paused = true;
+  }
+  else if(!gameover){
     applyForce();
   }
 }
